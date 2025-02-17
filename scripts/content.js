@@ -1,29 +1,47 @@
 class WhatsAppBot {
   constructor(group_name) {
+
     this.group_name = group_name;
     this.intervalId = null;
+    this.chatName = null;
   }
-
+  
   // Função para encontrar um elemento pelo título
   find_element_by_title(title) {
     const element = document.querySelector(`[title="${title}"]`);
     return element;
   }
 
-  // Função para verificar se está logado
-  checkIFisLogged() {
+  find_voice_message_ref() {
     const voiceMessageElement = document.querySelector('[aria-label="Mensagem de voz"]');
-    console.log('se está com algum chat aberto se está logado...');
-    if (voiceMessageElement) {
-      console.log('voiceMessageElement encontrada:', voiceMessageElement);
-      clearInterval(this.intervalId); // Para a busca após encontrar a div
-      this.createButton(); // Cria o botão para extrair contatos
+    return voiceMessageElement ? true : false;
+  }
 
-      // Aguarde 5 segundos para garantir que o chat foi carregado
-  
-    } else {
-      console.log('Nenhum chat aberto');
-    }
+  get_chat_name() {
+    const header = document.querySelectorAll('header')[3];
+    const chatName = header.childNodes[1].children[0].children[0].children[0].innerText;
+    console.log(header.childNodes[1].children[0].children[0].children[0]);
+    return chatName;
+  }
+
+
+
+  init() {
+    document.addEventListener("click", () => {
+      // verificar se estamos em um chat
+      const isChat = this.find_voice_message_ref();
+      if (isChat) {
+        clearInterval(this.intervalId)
+        const currentChatName = this.get_chat_name();
+        if (currentChatName !== this.chatName) {
+          console.log("Chat mudou", 'Chat atual:', currentChatName, 'Chat anterior:', this.chatName);
+          this.chatName = currentChatName;
+          this.createDownLoadButton();
+        }
+      } else {
+        console.log("Nenhum chat aberto");
+      }
+    })
   }
 
   // Função para extrair contatos
@@ -38,10 +56,11 @@ class WhatsAppBot {
   }
 
   // Função para criar um botão dentro da div do grupo
-  createButton() {
-    const header = document.querySelectorAll('header')[3].childNodes[1].children[1].children[0];
+  createDownLoadButton() {
+    const header = document.querySelectorAll('header')[3]
+    const targetNav = header.childNodes[1].children[1].children[0];
 
-    if (header) {
+    if (targetNav) {
         const button = document.createElement('button');
 
         // Criar o ícone SVG (ícone de carregamento)
@@ -92,17 +111,16 @@ class WhatsAppBot {
         button.appendChild(svg);
 
         // Estilo inicial do botão
-        button.style.position = 'absolute';
-        button.style.top = '35px';
-        button.style.left = 'calc(100% + 30px)'; // 30px à direita do título
-        button.style.zIndex = '1000';
         button.style.padding = '5px 30px';
         button.style.color = 'white';
         button.style.backgroundColor = 'transparent';
         button.style.border = '1px solid white';
         button.style.borderRadius = '5px';
         button.style.cursor = 'pointer';
-
+        
+        function getContatNav() {
+          return document.querySelectorAll('header')[3].childNodes[1].children[1].children[0];
+        }
         // Função de loading
         function startLoading() {
             button.innerHTML = '';  // Remove o conteúdo atual do botão
@@ -123,7 +141,7 @@ class WhatsAppBot {
 
             // Esperar 10 segundos antes de realizar a extração
             setTimeout(() => {
-                const contatos = document.querySelectorAll('header')[3].childNodes[1].children[1].children[0].innerText;
+                const contatos = getContatNav().innerText; // Extrai os contatos do chat
 
                 const arrayContatos = this.extractContacts(contatos);
                 alert('Contatos extraídos com sucesso!');
@@ -135,11 +153,12 @@ class WhatsAppBot {
         });
 
         // Encontra o contêiner do chat e posiciona o botão dentro dele
-        const parentDiv = header.closest('div');
-        if (parentDiv) {
-            parentDiv.style.position = 'relative'; // Torna o contêiner relativo para o posicionamento do botão
-            parentDiv.appendChild(button);
-            console.log(parentDiv);
+    
+
+        if (header) {
+          header.style.position = 'relative'; // Torna o contêiner relativo para o posicionamento do botão
+          header.appendChild(button);
+
         }
     }
 }
@@ -161,7 +180,7 @@ class WhatsAppBot {
 
   // Inicia a busca contínua
   startSearching() {
-    this.intervalId = setInterval(() => this.checkIFisLogged(), 1500);
+    this.intervalId = setInterval(() => this.init(), 1500);
   }
 
   // Para a busca
