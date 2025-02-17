@@ -11,32 +11,36 @@ class WhatsAppBot {
     const element = document.querySelector(`[title="${title}"]`);
     return element;
   }
-
+  // Função para encontrar um elemento pelo texto
   find_voice_message_ref() {
     const voiceMessageElement = document.querySelector('[aria-label="Mensagem de voz"]');
     return voiceMessageElement ? true : false;
   }
 
-  get_chat_name() {
-    const header = document.querySelectorAll('header')[3];
+  // Função para obter o nome do chat
+  get_chat_name(header) {
     const chatName = header.childNodes[1].children[0].children[0].children[0].innerText;
     console.log(header.childNodes[1].children[0].children[0].children[0]);
     return chatName;
   }
-
-
+  // Função para salvar o nome do chat
+  set_chat_name(chatName) {
+    this.chatName = chatName;
+  }
 
   init() {
     document.addEventListener("click", () => {
+      const header = document.querySelectorAll('header')[3];
+      const targetNav = header.childNodes[1].children[1].children[0];
       // verificar se estamos em um chat
       const isChat = this.find_voice_message_ref();
       if (isChat) {
         clearInterval(this.intervalId)
-        const currentChatName = this.get_chat_name();
+        const currentChatName = this.get_chat_name(header);
         if (currentChatName !== this.chatName) {
           console.log("Chat mudou", 'Chat atual:', currentChatName, 'Chat anterior:', this.chatName);
-          this.chatName = currentChatName;
-          this.createDownLoadButton();
+          this.set_chat_name(currentChatName);
+          if(header) this.createDownLoadButton(targetNav, header);
         }
       } else {
         console.log("Nenhum chat aberto");
@@ -55,10 +59,13 @@ class WhatsAppBot {
     }
   }
 
-  // Função para criar um botão dentro da div do grupo
-  createDownLoadButton() {
-    const header = document.querySelectorAll('header')[3]
-    const targetNav = header.childNodes[1].children[1].children[0];
+  // Função para obter os contatos do cabeçalho
+  getContatFromNav() {
+    return document.querySelectorAll('header')[3].childNodes[1].children[1].children[0].innerText;
+  }
+
+  // Função para criar o botão de download
+  createDownLoadButton(targetNav, header) {
 
     if (targetNav) {
         const button = document.createElement('button');
@@ -118,9 +125,6 @@ class WhatsAppBot {
         button.style.borderRadius = '5px';
         button.style.cursor = 'pointer';
         
-        function getContatNav() {
-          return document.querySelectorAll('header')[3].childNodes[1].children[1].children[0];
-        }
         // Função de loading
         function startLoading() {
             button.innerHTML = '';  // Remove o conteúdo atual do botão
@@ -136,33 +140,26 @@ class WhatsAppBot {
         }
 
         button.addEventListener('click', () => {
-            // Mudar para estado de loading
             startLoading();
-
-            // Esperar 10 segundos antes de realizar a extração
             setTimeout(() => {
-                const contatos = getContatNav().innerText; // Extrai os contatos do chat
-
+                const contatos = this.getContatFromNav(); 
                 const arrayContatos = this.extractContacts(contatos);
                 alert('Contatos extraídos com sucesso!');
-                this.saveAsCSV(arrayContatos); // Salva os contatos extraídos como CSV
-
-                // Restaurar o botão após a execução
+                this.saveAsCSV(arrayContatos); 
                 restoreButton();
-            }, 10000);  // Aguardar 10 segundos (10000ms)
+            }, 5000);  // Aguardar 10 segundos (10000ms)
         });
 
         // Encontra o contêiner do chat e posiciona o botão dentro dele
     
 
-        if (header) {
-          header.style.position = 'relative'; // Torna o contêiner relativo para o posicionamento do botão
-          header.appendChild(button);
+        
+        header.style.position = 'relative'; // Torna o contêiner relativo para o posicionamento do botão
+        header.appendChild(button);
 
-        }
+        
     }
 }
-
 
   // Função para salvar os dados como CSV
   saveAsCSV(data) {
