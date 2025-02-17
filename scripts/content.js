@@ -1,6 +1,6 @@
 class WhatsAppBot {
   constructor(group_name) {
-
+    this.count = 0;
     this.group_name = group_name;
     this.intervalId = null;
     this.chatName = null;
@@ -20,7 +20,6 @@ class WhatsAppBot {
   // Função para obter o nome do chat
   get_chat_name(header) {
     const chatName = header.childNodes[1].children[0].children[0].children[0].innerText;
-    console.log(header.childNodes[1].children[0].children[0].children[0]);
     return chatName;
   }
   // Função para salvar o nome do chat
@@ -29,6 +28,8 @@ class WhatsAppBot {
   }
 
   init() {
+    this.count++;
+    console.log('Busca contínua', this.count);
     document.addEventListener("click", () => {
       const header = document.querySelectorAll('header')[3];
       const targetNav = header.childNodes[1].children[1].children[0];
@@ -176,16 +177,11 @@ class WhatsAppBot {
 }
 
   // Inicia a busca contínua
-  startSearching() {
-    this.intervalId = setInterval(() => this.init(), 1500);
-  }
-
+ 
   // Para a busca
-  stopSearching() {
-    clearInterval(this.intervalId);
-  }
+
 }
 
 // Cria uma instância da classe passando o nome do grupo
 const bot = new WhatsAppBot('Bot wpp');
-bot.startSearching();
+bot.init();
